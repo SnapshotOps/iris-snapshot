@@ -1,8 +1,10 @@
 package net.irisshaders.iris.mixin;
 
-import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
+import com.mojang.renderpearl.api.pipeline.CompiledRenderPipeline;
 import com.mojang.renderpearl.backend.opengl.GlProgram;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import com.mojang.renderpearl.backend.opengl.Uniform;
+import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
 import net.irisshaders.iris.mixinterface.GlProgramBindings;
 import net.irisshaders.iris.pipeline.programs.IrisBindings;
 import net.irisshaders.iris.pipeline.programs.IrisProgram;
@@ -23,7 +25,9 @@ import java.util.Objects;
 public class MixinGlProgram implements GlProgramBindings {
 	@Shadow
 	@Final
-	private List<Uniform> uniforms;
+	private Int2ReferenceMap<Uniform> uniforms;
+	@Shadow
+	private int maxUniformBinding;
 	@Shadow
 	private Uniform.Ubo pushConstant;
 
@@ -31,7 +35,7 @@ public class MixinGlProgram implements GlProgramBindings {
 	private final Map<String, Uniform.Utb> iris$textureBuffers = new HashMap<>();
 
 	@Inject(method = "setupBindGroupLayouts", at = @At("HEAD"), cancellable = true)
-	private void iris$setupInitialBindings(List<BindGroupLayout.UniformDescription> descriptions, CallbackInfo ci) {
+	private void iris$setupInitialBindings(GlStateManager stateManager, List<CompiledRenderPipeline.CreateInfo.Uniform> descriptions, CallbackInfo ci) {
 		if ((Object) this instanceof IrisProgram) {
 			iris$setupBindings(descriptions, 0);
 			ci.cancel();
@@ -39,19 +43,16 @@ public class MixinGlProgram implements GlProgramBindings {
 	}
 
 	@Override
-	public void iris$setupBindings(List<BindGroupLayout.UniformDescription> descriptions, int pushConstantsSize) {
+	public void iris$setupBindings(List<CompiledRenderPipeline.CreateInfo.Uniform> descriptions, int pushConstantsSize) {
 		this.pushConstant = pushConstantsSize > 0 ? new Uniform.Ubo(IrisBindings.PUSH_CONSTANTS) : null;
-
-		while (this.uniforms.size() < Math.max(descriptions.size(), IrisBindings.RESOURCE_COUNT)) {
-			this.uniforms.add(null);
-		}
-
-		for (int i = 0; i < this.uniforms.size(); i++) {
-			this.uniforms.set(i, null);
-		}
+		this.uniforms.clear();
+		this.maxUniformBinding = Math.max(descriptions.size(), IrisBindings.RESOURCE_COUNT);
 
 		for (int i = 0; i < descriptions.size(); i++) {
-			this.uniforms.set(i, iris$createBinding(descriptions.get(i)));
+			Uniform binding = iris$createBinding(descriptions.get(i));
+			if (binding != null) {
+				this.uniforms.put(i, binding);
+			}
 		}
 	}
 
@@ -61,18 +62,14 @@ public class MixinGlProgram implements GlProgramBindings {
 			return;
 		}
 
-		for (int i = 0; i < this.uniforms.size(); i++) {
-			if (this.uniforms.get(i) instanceof Uniform.Utb) {
-				this.uniforms.set(i, null);
-			}
-		}
+		this.uniforms.values().removeIf(u -> u instanceof Uniform.Utb);
 
 		this.iris$textureBuffers.values().forEach(Uniform.Utb::close);
 		this.iris$textureBuffers.clear();
 	}
 
 	@Unique
-	private Uniform iris$createBinding(BindGroupLayout.UniformDescription description) {
+	private Uniform iris$createBinding(CompiledRenderPipeline.CreateInfo.Uniform description) {
 		return switch (description.type()) {
 			case UNIFORM_BUFFER -> {
 				int binding = iris$uniformBufferBinding(description.name());
@@ -84,7 +81,7 @@ public class MixinGlProgram implements GlProgramBindings {
 			}
 			case TEXEL_BUFFER -> {
 				int binding = iris$samplerBinding(description.name());
-				yield binding < 0 ? null : this.iris$textureBuffers.computeIfAbsent(description.name(), name -> new Uniform.Utb(binding, Objects.requireNonNull(description.gpuFormat())));
+				yield binding < 0 ? null : this.iris$textureBuffers.computeIfAbsent(description.name(), name -> new Uniform.Utb(net.irisshaders.iris.gl.state.GlStateManager.instance(), binding, Objects.requireNonNull(description.gpuFormat())));
 			}
 		};
 	}

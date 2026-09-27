@@ -1,6 +1,6 @@
 package net.irisshaders.iris.pipeline;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import net.irisshaders.iris.gl.state.GlStateManager;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
@@ -34,6 +34,7 @@ public class VanillaRenderingPipeline implements WorldRenderingPipeline {
 		WorldRenderingSettings.INSTANCE.setVertexFormat(ChunkMeshFormats.COMPACT);
 		WorldRenderingSettings.INSTANCE.setVoxelizeLightBlocks(false);
 		WorldRenderingSettings.INSTANCE.setBreaksAnisotropy(false);
+		WorldRenderingSettings.INSTANCE.setBlockStateIds(null);
 		WorldRenderingSettings.INSTANCE.setBlockTypeIds(Object2ObjectMaps.emptyMap());
 	}
 

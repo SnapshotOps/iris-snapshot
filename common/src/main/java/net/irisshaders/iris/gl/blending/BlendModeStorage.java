@@ -1,8 +1,8 @@
 package net.irisshaders.iris.gl.blending;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import net.irisshaders.iris.gl.state.GlStateManager;
 import net.irisshaders.iris.gl.IrisRenderSystem;
-import net.irisshaders.iris.mixin.GlStateManagerAccessor;
+import net.irisshaders.iris.gl.state.GlStateManagerAccessor;
 
 public class BlendModeStorage {
 	private static final boolean[] originalBlendEnable = new boolean[GlStateManagerAccessor.getBLEND_ENABLE().length];
@@ -21,7 +21,7 @@ public class BlendModeStorage {
 	public static void overrideBlend(BlendMode override) {
 		if (!blendLocked) {
 			// Only save the previous state if the blend mode wasn't already locked
-			GlStateManager.BlendState blendState = GlStateManagerAccessor.getBLEND();
+			com.mojang.renderpearl.backend.opengl.GlStateManager.BlendState blendState = GlStateManagerAccessor.getBLEND();
 
 			System.arraycopy(GlStateManagerAccessor.getBLEND_ENABLE(), 0, originalBlendEnable, 0, originalBlendEnable.length);
 			originalBlend = new BlendMode(blendState.srcRgb, blendState.dstRgb, blendState.srcAlpha, blendState.dstAlpha);
@@ -43,7 +43,7 @@ public class BlendModeStorage {
 	public static void overrideBufferBlend(int index, BlendMode override) {
 		if (!blendLocked) {
 			// Only save the previous state if the blend mode wasn't already locked
-			GlStateManager.BlendState blendState = GlStateManagerAccessor.getBLEND();
+			com.mojang.renderpearl.backend.opengl.GlStateManager.BlendState blendState = GlStateManagerAccessor.getBLEND();
 
 			System.arraycopy(GlStateManagerAccessor.getBLEND_ENABLE(), 0, originalBlendEnable, 0, originalBlendEnable.length);
 			originalBlend = new BlendMode(blendState.srcRgb, blendState.dstRgb, blendState.srcAlpha, blendState.dstAlpha);

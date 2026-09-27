@@ -1,7 +1,7 @@
 package net.irisshaders.iris.gl.blending;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
-import net.irisshaders.iris.mixin.GlStateManagerAccessor;
+import net.irisshaders.iris.gl.state.GlStateManager;
+import net.irisshaders.iris.gl.state.GlStateManagerAccessor;
 
 import java.util.Arrays;
 
@@ -17,7 +17,7 @@ public class DepthColorStorage {
 	public static void disableDepthColor() {
 		if (!depthColorLocked) {
 			// Only save the previous state if the depth and color mask wasn't already locked
-			GlStateManager.DepthState depthState = GlStateManagerAccessor.getDEPTH();
+			com.mojang.renderpearl.backend.opengl.GlStateManager.DepthState depthState = GlStateManagerAccessor.getDEPTH();
 
 			originalDepthEnable = depthState.mask;
 			for (int i = 0; i < originalColor.length; i++) {

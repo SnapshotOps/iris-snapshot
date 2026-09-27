@@ -1,6 +1,6 @@
 package net.irisshaders.iris.uniforms.custom.cached;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import net.irisshaders.iris.gl.state.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import kroppeb.stareval.function.FunctionReturn;
 import kroppeb.stareval.function.Type;

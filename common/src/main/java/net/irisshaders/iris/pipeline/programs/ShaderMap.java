@@ -1,7 +1,7 @@
 package net.irisshaders.iris.pipeline.programs;
 
 import com.mojang.renderpearl.backend.opengl.GlProgram;
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import net.irisshaders.iris.gl.state.GlStateManager;
 import it.unimi.dsi.fastutil.objects.Object2BooleanFunction;
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import org.lwjgl.opengl.GL46C;

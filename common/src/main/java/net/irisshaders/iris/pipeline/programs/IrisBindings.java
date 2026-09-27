@@ -1,6 +1,6 @@
 package net.irisshaders.iris.pipeline.programs;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import net.irisshaders.iris.gl.state.GlStateManager;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL31C;
 

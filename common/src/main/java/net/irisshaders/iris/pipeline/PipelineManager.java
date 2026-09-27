@@ -1,6 +1,6 @@
 package net.irisshaders.iris.pipeline;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import net.irisshaders.iris.gl.state.GlStateManager;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
@@ -34,8 +34,12 @@ public class PipelineManager {
 			pipelinesPerDimension.put(currentDimension, pipeline);
 
 			if (WorldRenderingSettings.INSTANCE.isReloadRequired()) {
-				if (Minecraft.getInstance().levelExtractor != null) {
-					Minecraft.getInstance().levelExtractor.allChanged();
+				Minecraft mc = Minecraft.getInstance();
+				if (mc.levelExtractor != null) {
+					mc.levelExtractor.allChanged();
+				}
+				if (mc.levelRenderer != null && mc.level != null && mc.gameRenderer != null) {
+					mc.levelRenderer.invalidateCompiledGeometry(mc.level, mc.options, mc.gameRenderer.mainCamera(), mc.getBlockColors());
 				}
 
 				WorldRenderingSettings.INSTANCE.clearReloadRequired();

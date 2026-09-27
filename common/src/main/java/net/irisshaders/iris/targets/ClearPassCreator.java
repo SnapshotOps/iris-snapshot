@@ -1,7 +1,7 @@
 package net.irisshaders.iris.targets;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import net.irisshaders.iris.gl.state.GlStateManager;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.irisshaders.iris.shaderpack.properties.PackRenderTargetDirectives;

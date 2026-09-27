@@ -2,7 +2,7 @@ package net.irisshaders.iris.shadows;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.renderpearl.api.commands.RenderPass;
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import net.irisshaders.iris.gl.state.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.textures.AddressMode;
 import com.mojang.renderpearl.api.textures.FilterMode;

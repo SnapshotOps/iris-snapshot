@@ -2,13 +2,16 @@ package net.irisshaders.iris.pipeline.programs;
 
 import com.mojang.renderpearl.backend.opengl.GlProgram;
 import com.mojang.renderpearl.backend.opengl.GlRenderPass;
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import net.irisshaders.iris.gl.state.GlStateManager;
 import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
-import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.CompiledRenderPipeline;
+import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
+import com.mojang.renderpearl.api.pipeline.CompiledRenderPipeline;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.renderpearl.api.pipeline.UniformType;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
-import com.mojang.renderpearl.api.vertex.VertexFormat;
-import com.mojang.renderpearl.api.vertex.VertexFormatElement;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
 import com.mojang.renderpearl.util.TextureViewAndSampler;
 import net.irisshaders.iris.compat.SkipList;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
@@ -83,7 +86,7 @@ public class FallbackShader extends GlProgram implements IrisProgram {
 		layouts.addAll(BindGroupLayouts.GLOBALS.uniforms());
 		layouts.addAll(BindGroupLayouts.FOG.uniforms());
 
-		super.setupBindGroupLayouts(layouts);
+		super.setupBindGroupLayouts(net.irisshaders.iris.gl.state.GlStateManager.instance(), layouts.stream().map(u -> new CompiledRenderPipeline.CreateInfo.Uniform(u.name(), 0, u.type(), u.gpuFormat())).toList());
 
 		this.parent = parent;
 		this.blendModeOverride = blendModeOverride;
@@ -127,7 +130,7 @@ public class FallbackShader extends GlProgram implements IrisProgram {
 	}
 
 	@Override
-	public void iris$setupState(List<BindGroupLayout.UniformDescription> samplers) {
+	public void iris$setupState(List<CompiledRenderPipeline.CreateInfo.Uniform> samplers) {
 		isSetUp = true;
 		DepthColorStorage.unlockDepthColor();
 

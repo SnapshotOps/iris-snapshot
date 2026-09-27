@@ -1,6 +1,6 @@
 package net.irisshaders.iris.gl.framebuffer;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import net.irisshaders.iris.gl.state.GlStateManager;
 import com.mojang.renderpearl.backend.opengl.GlTexture;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;

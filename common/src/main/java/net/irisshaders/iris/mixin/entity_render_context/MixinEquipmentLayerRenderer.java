@@ -24,14 +24,14 @@ import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 
 @Mixin(EquipmentLayerRenderer.class)
 public abstract class MixinEquipmentLayerRenderer {
-	private static final String V = "Lnet/minecraft/client/renderer/entity/layers/EquipmentLayerRenderer;renderLayers(Lnet/minecraft/client/resources/model/EquipmentClientInfo$LayerType;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lnet/minecraft/world/item/ItemStack;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;ILnet/minecraft/resources/Identifier;II)V";
+	private static final String V = "Lnet/minecraft/client/renderer/entity/layers/EquipmentLayerRenderer;renderLayers(Lnet/minecraft/client/resources/model/EquipmentClientInfo$LayerType;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lnet/minecraft/world/item/ItemStack;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;ILnet/minecraft/resources/Identifier;II)I";
 	@Inject(method = V, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/resources/model/EquipmentClientInfo$Layer;usePlayerTexture()Z"))
-	private void changeId(CallbackInfo ci, @Local(argsOnly = true) ItemStack itemStack) {
+	private void changeId(CallbackInfoReturnable<Integer> ci, @Local(argsOnly = true) ItemStack itemStack) {
 		if (WorldRenderingSettings.INSTANCE.getItemIds() == null) return;
 
 		Identifier location = itemStack.get(DataComponents.ITEM_MODEL);
@@ -43,7 +43,7 @@ public abstract class MixinEquipmentLayerRenderer {
 	}
 
 	@Inject(method = V, at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/entity/layers/EquipmentLayerRenderer;trimTextureLookup:Ljava/util/function/Function;"))
-	private void changeTrimTemp(CallbackInfo ci, @Local ArmorTrim armorTrim) {
+	private void changeTrimTemp(CallbackInfoReturnable<Integer> ci, @Local ArmorTrim armorTrim) {
 		if (WorldRenderingSettings.INSTANCE.getItemIds() == null) return;
 
 		// TODO 1.21.5 check
@@ -51,12 +51,12 @@ public abstract class MixinEquipmentLayerRenderer {
 	}
 
 	@Inject(method = V, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/OrderedSubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;IIILnet/minecraft/client/renderer/texture/UvMapping;I)V", ordinal = 2, shift = At.Shift.AFTER))
-	private void changeTrimTemp2(CallbackInfo ci) {
+	private void changeTrimTemp2(CallbackInfoReturnable<Integer> ci) {
 		EntityState.restoreItemId();
 	}
 
 	@Inject(method = V, at = @At(value = "TAIL"))
-	private void changeId2(CallbackInfo ci) {
+	private void changeId2(CallbackInfoReturnable<Integer> ci) {
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(0);
 	}
 }

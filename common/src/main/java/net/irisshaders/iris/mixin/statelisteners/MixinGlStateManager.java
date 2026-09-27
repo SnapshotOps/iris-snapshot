@@ -18,7 +18,7 @@ public class MixinGlStateManager {
 	}
 
 	@Inject(method = "_blendFuncSeparate", at = @At("RETURN"), remap = false)
-	private static void iris$onBlendFunc(int i, int j, int k, int l, CallbackInfo ci) {
+	private void iris$onBlendFunc(int i, int j, int k, int l, CallbackInfo ci) {
 		if (blendFuncListener != null) {
 			blendFuncListener.run();
 		}

@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.renderpearl.api.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.vertices.BlockSensitiveBufferBuilder;
@@ -97,11 +97,11 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 	@Shadow
 	public abstract VertexConsumer setNormal(float f, float g, float h);
 
-	@ModifyVariable(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/vertex/VertexFormat;contains(Ljava/lang/String;)Z"), argsOnly = true)
+	@ModifyVariable(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/VertexFormat;contains(Ljava/lang/String;)Z"), argsOnly = true)
 	private VertexFormat iris$extendFormat(VertexFormat format) {
 		injectNormalAndUV1 = false;
 
-		if (ImmediateState.skipExtension.get() || !ImmediateState.isRenderingLevel || !Iris.isPackInUseQuick()) {
+		if (ImmediateState.skipExtension.get() || ImmediateState.bypass || !ImmediateState.isRenderingLevel || !Iris.isPackInUseQuick()) {
 			return format;
 		}
 

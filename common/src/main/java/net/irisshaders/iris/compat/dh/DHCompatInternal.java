@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat.dh;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import net.irisshaders.iris.gl.state.GlStateManager;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import com.seibel.distanthorizons.api.DhApi;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiFramebuffer;
@@ -210,6 +210,9 @@ public class DHCompatInternal {
 		OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, dhTerrainFramebufferWrapper);
 		OverrideInjector.INSTANCE.unbind(IDhApiGenericObjectShaderProgram.class, genericShader);
 		OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, dhShadowFramebufferWrapper);
+		if (DhApi.Delayed.renderProxy != null) {
+			DhApi.Delayed.renderProxy.setDeferTransparentRendering(false);
+		}
 		dhTerrainFramebufferWrapper = null;
 		dhShadowFramebufferWrapper = null;
 	}

@@ -1,23 +1,16 @@
 package net.irisshaders.iris.mixin;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
-import com.mojang.renderpearl.backend.opengl.Uniform;
+import com.mojang.renderpearl.backend.opengl.GlProgram;
+import net.irisshaders.iris.gl.state.GlStateManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
-/**
- * Tries to ensure that texture unit 0 ends up as the semantically default texture unit with Iris extended shaders.
- * <p>
- * Located in {@link Uniform} to avoid a conflict with a Sodium mixin to ShaderInstance.
- */
-@Mixin(GlStateManager.class)
+@Mixin(GlProgram.class)
 public class MixinUniform {
-	@Inject(method = "_glGetUniformLocation", at = @At("RETURN"), cancellable = true)
-	private static void iris$glGetUniformLocation(int programId, CharSequence name,
-												  CallbackInfoReturnable<Integer> cir) {
-		int location = cir.getReturnValue();
+	@Redirect(method = "setupUniforms", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL20;glGetUniformLocation(ILjava/lang/CharSequence;)I"), require = 0, remap = false)
+	private int iris$glGetUniformLocation(int programId, CharSequence name) {
+		int location = GlStateManager._glGetUniformLocation(programId, name);
 
 		if (location == -1 && (name.equals("Sampler0") || name.equals("u_BlockTex"))) {
 			location = GlStateManager._glGetUniformLocation(programId, "tex");
@@ -27,8 +20,6 @@ public class MixinUniform {
 
 				if (location == -1) {
 					location = GlStateManager._glGetUniformLocation(programId, "texture");
-
-					// TODO: If a shader samples from *any* sampler with a name that isn't known, then it should act like sampler 0.
 				}
 			}
 		}
@@ -41,8 +32,6 @@ public class MixinUniform {
 			location = GlStateManager._glGetUniformLocation(programId, "lightmap");
 		}
 
-		if (cir.getReturnValue() == -1 && location != -1) {
-			cir.setReturnValue(location);
-		}
+		return location;
 	}
 }

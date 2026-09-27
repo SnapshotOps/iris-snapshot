@@ -1,26 +1,15 @@
 package net.irisshaders.iris.mixin;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.renderpearl.backend.opengl.GlCommandEncoder;
-import com.mojang.renderpearl.backend.opengl.GlConst;
 import com.mojang.renderpearl.backend.opengl.GlProgram;
 import com.mojang.renderpearl.backend.opengl.GlRenderPass;
 import com.mojang.renderpearl.backend.opengl.GlRenderPipeline;
 import com.mojang.renderpearl.backend.opengl.GlStateManager;
-import com.mojang.renderpearl.api.pipeline.BlendFunction;
-import com.mojang.renderpearl.api.pipeline.ColorTargetState;
-import com.mojang.renderpearl.api.pipeline.DepthStencilState;
-import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.blaze3d.systems.ScissorState;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.blending.DepthColorStorage;
-import net.irisshaders.iris.pipeline.IrisPipelines;
-import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
-import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.pipeline.programs.ExtendedShader;
 import net.irisshaders.iris.pipeline.programs.IrisProgram;
 import net.irisshaders.iris.shadows.ShadowRenderer;
@@ -39,10 +28,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 @Mixin(GlCommandEncoder.class)
@@ -55,58 +42,76 @@ public class MixinGlCommandEncoder {
 	@Nullable
 	private GlProgram lastProgram;
 
+	@Shadow
+	private GlStateManager stateManager;
+
 	@Unique
 	private int tempFBO;
 
 	@Unique
 	private List<IrisProgram> programsToClear = new ArrayList<>();
 
-	// Do not change the viewport in the shadow pass.
-	@Redirect(method = "createRenderPass", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/opengl/GlStateManager;_viewport(IIII)V"))
+	@Redirect(method = "createRenderPass", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL33C;glViewport(IIII)V"))
 	private void changeViewport(int i, int j, int k, int l) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			return;
 		} else {
-			GlStateManager._viewport(i, j, k, l);
+			GL33C.glViewport(i, j, k, l);
 		}
 	}
 
-	@Redirect(method = "createRenderPass", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/opengl/GlStateManager;_scissorBox(IIII)V"))
+	@Redirect(method = "createRenderPass", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL33C;glScissor(IIII)V"))
 	private void changeViewport2(int i, int j, int k, int l) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-            GlStateManager._scissorBox(0, 0, ShadowRenderer.RESOLUTION, ShadowRenderer.RESOLUTION);
-            return;
+			GL33C.glScissor(0, 0, ShadowRenderer.RESOLUTION, ShadowRenderer.RESOLUTION);
+			return;
 		} else {
-			GlStateManager._scissorBox(i, j, k, l);
+			GL33C.glScissor(i, j, k, l);
 		}
 	}
-
 
 	@Redirect(method = "createRenderPass", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/ScissorState;enable(IIII)V"))
 	private void changeViewport3(ScissorState instance, int x, int y, int width, int height) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-            instance.enable(0, 0, ShadowRenderer.RESOLUTION, ShadowRenderer.RESOLUTION);
-            return;
+			instance.enable(0, 0, ShadowRenderer.RESOLUTION, ShadowRenderer.RESOLUTION);
+			return;
 		} else {
-            instance.enable(x, y, width, height);
+			instance.enable(x, y, width, height);
 		}
 	}
 
-	// Do not change the viewport in the shadow pass.
 	@Redirect(method = "createRenderPass", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/opengl/GlStateManager;_glBindFramebuffer(II)V"))
-	private void changeFramebuffer(int i, int j) {
+	private void changeFramebuffer(GlStateManager instance, int i, int j) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered() || ImmediateState.safeToMultiply) {
 			this.tempFBO = j;
 			return;
 		} else {
-			GlStateManager._glBindFramebuffer(i, j);
+			instance._glBindFramebuffer(i, j);
 		}
 	}
 
 	@Redirect(method = "createRenderPass", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL33C;glDrawBuffers([I)V"))
 	private void iris$changeDrawBuffers(int[] buffers) {
 		if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered() && !ImmediateState.safeToMultiply) {
-			GL33C.glDrawBuffers(buffers);
+			if (buffers == null || buffers.length == 0) {
+				return;
+			}
+			int currentDrawFbo = org.lwjgl.opengl.GL11C.glGetInteger(org.lwjgl.opengl.GL30C.GL_DRAW_FRAMEBUFFER_BINDING);
+			if (currentDrawFbo == 0) {
+				boolean hasAttachment = false;
+				for (int b : buffers) {
+					if (b != org.lwjgl.opengl.GL11C.GL_NONE) {
+						hasAttachment = true;
+						break;
+					}
+				}
+				GL33C.glDrawBuffers(hasAttachment ? new int[]{org.lwjgl.opengl.GL11C.GL_BACK} : new int[]{org.lwjgl.opengl.GL11C.GL_NONE});
+			} else {
+				try {
+					GL33C.glDrawBuffers(buffers);
+				} catch (Throwable ignored) {
+				}
+			}
 		}
 	}
 
@@ -118,7 +123,7 @@ public class MixinGlCommandEncoder {
 		DepthColorStorage.unlockDepthColor();
 
 		if (ImmediateState.safeToMultiply && !(glRenderPass.pipeline.program() instanceof ExtendedShader)) {
-			GlStateManager._glBindFramebuffer(GL46C.GL_FRAMEBUFFER, tempFBO);
+			this.stateManager._glBindFramebuffer(GL46C.GL_FRAMEBUFFER, tempFBO);
 		}
 
 		lastPass = glRenderPass;
@@ -133,19 +138,18 @@ public class MixinGlCommandEncoder {
 			IrisRenderSystem.disableBlend();
 			glRenderPass.iris$getCustomPass().setupState();
 
-
 			if (glRenderPass.isScissorEnabled()) {
-				GlStateManager._enableScissorTest();
-				GlStateManager._scissorBox(glRenderPass.getScissorX(), glRenderPass.getScissorY(), glRenderPass.getScissorWidth(), glRenderPass.getScissorHeight());
+				this.stateManager._enableScissorTest();
+				GL33C.glScissor(glRenderPass.getScissorX(), glRenderPass.getScissorY(), glRenderPass.getScissorWidth(), glRenderPass.getScissorHeight());
 			} else {
-				GlStateManager._disableScissorTest();
+				this.stateManager._disableScissorTest();
 			}
 
-			GlStateManager._disableDepthTest();
-			GlStateManager._depthMask(false);
-			GlStateManager._disablePolygonOffset();
-			GlStateManager._disableCull();
-			GlStateManager._colorMask(15);
+			this.stateManager._disableDepthTest();
+			this.stateManager._depthMask(false);
+			this.stateManager._disablePolygonOffset();
+			this.stateManager._disableCull();
+			this.stateManager._colorMask(15);
 		}
 		if (glRenderPass.pipeline.program() instanceof ExtendedShader shader) {
 			ImmediateState.usingTessellation = shader.usesTessellation();

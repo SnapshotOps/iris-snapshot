@@ -2,19 +2,13 @@ package net.irisshaders.iris.mixin;
 
 import com.mojang.renderpearl.backend.opengl.FrameBufferAttachment;
 import com.mojang.renderpearl.backend.opengl.GlConst;
-import com.mojang.renderpearl.backend.opengl.GlDevice;
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
-import com.mojang.renderpearl.backend.opengl.GlTexture;
+import net.irisshaders.iris.gl.state.GlStateManager;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.textures.GpuTexture;
-import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.mixinterface.RenderTargetInterface;
 import net.irisshaders.iris.targets.Blaze3dRenderTargetExt;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL43C;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -24,10 +18,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
-/**
- * Allows Iris to detect when the depth texture was re-created, so we can re-attach it
- * to the shader framebuffers. See DeferredWorldRenderingPipeline and RenderTargets.
- */
 @Mixin(RenderTarget.class)
 public class MixinRenderTarget implements Blaze3dRenderTargetExt, RenderTargetInterface {
 	@Shadow

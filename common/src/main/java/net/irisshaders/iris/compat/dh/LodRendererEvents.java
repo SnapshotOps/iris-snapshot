@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat.dh;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import net.irisshaders.iris.gl.state.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.seibel.distanthorizons.api.DhApi;
 import com.seibel.distanthorizons.api.enums.rendering.EDhApiFogDrawMode;
@@ -338,9 +338,7 @@ public class LodRendererEvents {
 					if (instance.shouldOverride && instance.getTranslucentFB() != null) {
 						instance.copyTranslucents(textureWidth, textureHeight);
 						instance.getTranslucentShader().bind();
-						//float nearClip = DhApi.Delayed.renderProxy.getNearClipPlaneDistanceInBlocks(partialTicks);
-						//float farClip = (float) ((double) (DHCompatInternal.getDhBlockRenderDistance() + 512) * Math.sqrt(2.0));
-						GL46C.glDisable(GL46C.GL_CULL_FACE);
+						GlStateManager._disableCull();
 						//Iris.logger.info("event near clip: "+event.value.nearClipPlane+" event far clip: "+event.value.farClipPlane+
 						//	" \niris near clip: "+nearClip+" iris far clip: "+farClip);
 

@@ -2,23 +2,18 @@ package net.irisshaders.iris.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.llamalad7.mixinextras.sugar.Local;
-import com.mojang.renderpearl.api.pipeline.RenderPipeline;
-import com.mojang.renderpearl.backend.api.BackendRenderPipeline;
 import com.mojang.renderpearl.backend.opengl.GlDevice;
 import com.mojang.renderpearl.backend.opengl.GlProgram;
 import com.mojang.renderpearl.backend.opengl.GlRenderPipeline;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import com.mojang.renderpearl.backend.opengl.VertexArray;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.mixinterface.GlProgramBindings;
 import net.irisshaders.iris.mixinterface.GlRenderPipelineAccess;
-import net.irisshaders.iris.pipeline.IrisPipelines;
-import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.pipeline.programs.IrisProgram;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
-import net.irisshaders.iris.vertices.ImmediateState;
 import org.lwjgl.opengl.GL46C;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,14 +29,14 @@ public class MixinGlRenderPipeline implements GlRenderPipelineAccess {
 	@Final
 	private GlProgram program;
 	@Unique
-	private BackendRenderPipeline.CreateInfo createInfo;
+	private com.mojang.renderpearl.api.pipeline.CompiledRenderPipeline.CreateInfo createInfo;
 
 	@Inject(method = "<init>", at = @At("RETURN"))
-	private void iris$setCreateInfo(GlDevice device, BackendRenderPipeline.CreateInfo createInfo, GlProgram program, VertexArray vertexArray, CallbackInfo ci) {
+	private void iris$setCreateInfo(GlDevice device, com.mojang.renderpearl.api.pipeline.CompiledRenderPipeline.CreateInfo createInfo, GlProgram program, VertexArray vertexArray, CallbackInfo ci) {
 		this.createInfo = createInfo;
 	}
 	@Override
-	public BackendRenderPipeline.CreateInfo getCreateInfo() {
+	public com.mojang.renderpearl.api.pipeline.CompiledRenderPipeline.CreateInfo getCreateInfo() {
 		return this.createInfo;
 	}
 
@@ -50,13 +45,10 @@ public class MixinGlRenderPipeline implements GlRenderPipelineAccess {
 		return !ShadowRenderingState.areShadowsCurrentlyBeingRendered() && original.call(instance);
 	}
 
-
 	@WrapOperation(method = "bind", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/opengl/GlStateManager;_depthFunc(I)V"))
-	private void iris$pass(int compareOp, Operation<Void> original) {
-		WorldRenderingPipeline p = Iris.getPipelineManager().getPipelineNullable();
-
+	private void iris$pass(GlStateManager stateManager, int compareOp, Operation<Void> original) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			original.call(switch (compareOp) {
+			original.call(stateManager, switch (compareOp) {
 				case GL46C.GL_ALWAYS -> 519;
 				case GL46C.GL_LESS -> GL46C.GL_GREATER;
 				case GL46C.GL_LEQUAL -> GL46C.GL_GEQUAL;
@@ -68,26 +60,25 @@ public class MixinGlRenderPipeline implements GlRenderPipelineAccess {
 				default -> throw new IllegalStateException("Unexpected value: " + compareOp);
 			});
 		} else {
-			original.call(compareOp);
+			original.call(stateManager, compareOp);
 		}
 	}
 
-
 	@WrapOperation(method = "bind", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/opengl/GlStateManager;_enableBlend(I)V"))
-	private void iris$enableBlend(int index, Operation<Void> original) {
+	private void iris$enableBlend(GlStateManager stateManager, int index, Operation<Void> original) {
 		if (this.program instanceof IrisProgram && this.createInfo.colorTargetStates().size() == 1) {
 			IrisRenderSystem.enableBlend();
 		} else {
-			original.call(index);
+			original.call(stateManager, index);
 		}
 	}
 
 	@WrapOperation(method = "bind", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/opengl/GlStateManager;_disableBlend(I)V"))
-	private void iris$disableBlend(int index, Operation<Void> original) {
+	private void iris$disableBlend(GlStateManager stateManager, int index, Operation<Void> original) {
 		if (this.program instanceof IrisProgram && this.createInfo.colorTargetStates().size() == 1) {
 			IrisRenderSystem.disableBlend();
 		} else {
-			original.call(index);
+			original.call(stateManager, index);
 		}
 	}
 

@@ -5,7 +5,7 @@ import com.mojang.blaze3d.platform.DisplayData;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.platform.WindowEventHandler;
 import com.mojang.renderpearl.api.device.GpuDebugOptions;
-import com.mojang.renderpearl.api.pipeline.ShaderSource;
+import com.mojang.blaze3d.pipeline.ShaderSource;
 import com.mojang.renderpearl.api.device.GpuBackend;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.gui.SodiumOptions;

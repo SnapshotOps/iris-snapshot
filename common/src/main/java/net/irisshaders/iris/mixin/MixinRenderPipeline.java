@@ -1,9 +1,9 @@
 package net.irisshaders.iris.mixin;
 
 import com.mojang.renderpearl.api.pipeline.BlendFunction;
-import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.renderpearl.api.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkMeshFormats;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
@@ -22,13 +22,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
-
 @Mixin(RenderPipeline.class)
 public class MixinRenderPipeline {
+	@Shadow @Final private Identifier location;
+
+	@Inject(method = "isCull", at = @At("HEAD"), cancellable = true)
+	private void iris$disableItemCulling(CallbackInfoReturnable<Boolean> cir) {
+		if (this.location != null && this.location.getPath().contains("item")) {
+			cir.setReturnValue(false);
+		}
+	}
+
 	@Inject(method = "getVertexFormatBinding", at = @At("RETURN"), cancellable = true)
 	private void iris$change(CallbackInfoReturnable<VertexFormat> cir) {
-		if (Iris.isPackInUseQuick() && Thread.currentThread().getName().contains("Render") && ImmediateState.isRenderingLevel && !ImmediateState.skipExtension.get()) {
+		if (Iris.isPackInUseQuick() && Thread.currentThread().getName().contains("Render") && ImmediateState.isRenderingLevel && !ImmediateState.bypass && !ImmediateState.skipExtension.get()) {
 			VertexFormat vf = cir.getReturnValue();
 			RenderPipeline thiss = (RenderPipeline) (Object) this;
 			if (Objects.equals(vf, DefaultVertexFormat.BLOCK)) {
@@ -48,7 +55,7 @@ public class MixinRenderPipeline {
 	}
 	@Inject(method = "getVertexFormatBindings", at = @At("RETURN"), cancellable = true)
 	private void iris$change2(CallbackInfoReturnable<List<VertexFormat>> cir) {
-		if (Iris.isPackInUseQuick() && Thread.currentThread().getName().contains("Render") && ImmediateState.isRenderingLevel && !ImmediateState.skipExtension.get()) {
+		if (Iris.isPackInUseQuick() && Thread.currentThread().getName().contains("Render") && ImmediateState.isRenderingLevel && !ImmediateState.bypass && !ImmediateState.skipExtension.get()) {
 			VertexFormat vf = cir.getReturnValue().get(0);
 			RenderPipeline thiss = (RenderPipeline) (Object) this;
 			if (Objects.equals(vf, DefaultVertexFormat.BLOCK)) {

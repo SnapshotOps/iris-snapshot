@@ -2,8 +2,8 @@ package net.irisshaders.iris.mixin.forge;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.systems.CommandEncoder;
-import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.renderpearl.api.commands.CommandEncoder;
+import com.mojang.renderpearl.api.textures.GpuTexture;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.NeoLambdas;
 import net.irisshaders.iris.api.v0.IrisApi;

@@ -1,10 +1,13 @@
 package net.irisshaders.iris.pipeline.programs;
 
 import com.mojang.renderpearl.backend.opengl.GlProgram;
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import net.irisshaders.iris.gl.state.GlStateManager;
 import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
+import com.mojang.renderpearl.api.pipeline.CompiledRenderPipeline;
+import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
+import com.mojang.renderpearl.api.pipeline.CompiledRenderPipeline;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.renderpearl.api.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.logging.LogUtils;
 import net.caffeinemc.mods.sodium.client.render.chunk.ShaderChunkRenderer;
 import net.irisshaders.iris.compat.SkipList;
@@ -139,7 +142,7 @@ public class ExtendedShader extends GlProgram implements IrisProgram {
             layouts.addAll(ShaderChunkRenderer.BIND_GROUP.uniforms());
         }
 
-		super.setupBindGroupLayouts(layouts);
+		super.setupBindGroupLayouts(net.irisshaders.iris.gl.state.GlStateManager.instance(), layouts.stream().map(u -> new CompiledRenderPipeline.CreateInfo.Uniform(u.name(), 0, u.type(), u.gpuFormat())).toList());
 
 
 		ProgramUniforms.Builder uniformBuilder = ProgramUniforms.builder(string, programId);
@@ -205,7 +208,7 @@ public class ExtendedShader extends GlProgram implements IrisProgram {
 	private float[] tempF = new float[9];
 
 	@Override
-	public void iris$setupState(List<BindGroupLayout.UniformDescription> samplers) {
+	public void iris$setupState(List<CompiledRenderPipeline.CreateInfo.Uniform> samplers) {
 		isSetup = true;
 		DepthColorStorage.unlockDepthColor();
 
